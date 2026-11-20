@@ -18,7 +18,7 @@ Using this workflow, you can build an `.ipa` file entirely in the cloud—withou
 ## 🚀 How to Use
 
 ### Step 1: Add the Workflow File to Your Project
-Download the `build-unsigned-ipa.yml` file from this repository and place it in your Flutter project's directory:
+Download the `build-unsigned-ipa.yml` file from this repository and place it in your Flutter project's directory ".github/workflows":
 
 ```text
 .github/workflows/build-unsigned-ipa.yml
