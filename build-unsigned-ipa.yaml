@@ -1,0 +1,52 @@
+name: Build Unsigned iOS IPA
+
+on:
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+
+env:
+  # Change this to '.' if your Flutter project is in the root directory of the repository
+  PROJECT_DIR: '.'
+
+jobs:
+  build:
+    runs-on: macos-latest # Uses GitHub's hosted macOS runner (Free for public repos)
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS (No Codesign)
+        # Key step: --no-codesign bypasses the need for an Apple Developer certificate
+        run: flutter build ios --release --no-codesign
+
+      - name: Package Unsigned IPA
+        # Manually wraps Runner.app inside a Payload folder and compresses it into an .ipa file
+        run: |
+          mkdir -p Payload
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            cp -R build/ios/iphoneos/Runner.app Payload/
+          elif [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
+            cp -R build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
+          else
+            echo "Error: Runner.app not found!"
+            exit 1
+          fi
+          zip -r9 app-unsigned.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: ${{ env.PROJECT_DIR }}/app-unsigned.ipa
